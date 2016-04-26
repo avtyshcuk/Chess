@@ -23,7 +23,33 @@ Item {
                 property bool indexParity: index % 2
                 color: isFirstCellWhite ? (indexParity ? "white" : "black") :
                                           (indexParity ? "black" : "white")
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+//                        var component;
+
+                        if (index == 0) {
+                            var component = Qt.createComponent("Piece.qml");
+                            if (component.status == Component.Ready)
+                                component.createObject(rect, {/*"anchors.centerIn" : rect*/});
+
+                            component.x = 400
+                        }
+
+//                        if (index == 63) {
+//                            component.x = 300
+//                        }
+
+                    }
+                }
             }
+        }
+
+        Component.onCompleted: {
+//            var component = Qt.createComponent("Piece.qml");
+//            if (component.status == Component.Ready)
+//                component.createObject(parent, {"x": 100, "y": 100});
         }
     }
 }

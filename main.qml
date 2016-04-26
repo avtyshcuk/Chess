@@ -24,4 +24,5 @@ ApplicationWindow {
     }
 
     ChessBoard {}
+
 }

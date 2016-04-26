@@ -3,5 +3,6 @@
         <file>main.qml</file>
         <file>MainForm.ui.qml</file>
         <file>ChessBoard.qml</file>
+        <file>Piece.qml</file>
     </qresource>
 </RCC>
