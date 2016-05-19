@@ -1,5 +1,6 @@
 import QtQuick 2.0
 
+
 Item {
     id: root
     anchors.fill: parent
@@ -9,9 +10,19 @@ Item {
         var component = Qt.createComponent("Piece.qml");
         if (component.status == Component.Ready) {
             var piece = color + "_" + piece + ".png";
-            console.log(piece)
             component.createObject(repeater.itemAt(index), {"source": piece});
         }
+    }
+
+    function getIndexFromPosition(position) {
+        var x = position.charCodeAt(0) - 'a'.charCodeAt(0);
+        var y = boardSize - Number(position[1]);
+
+        return y * boardSize + x;
+    }
+
+    PositionStorage {
+        id: storage
     }
 
     Grid {
@@ -39,9 +50,19 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        putPiece(4, "white", "king")
+
                     }
                 }
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        var initialPosition = storage.initialPosition
+        for (var color in initialPosition) {
+            for (var position in initialPosition[color]) {
+                var piece = initialPosition[color][position];
+                putPiece(getIndexFromPosition(position), color, piece);
             }
         }
     }
