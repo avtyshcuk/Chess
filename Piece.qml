@@ -1,8 +1,20 @@
 import QtQuick 2.4
 
-Image {
+Item {
     id: piece
-    anchors.fill: parent
+
+    property alias source: pieceImage.source
+
+    Image {
+        id: pieceImage
+        anchors.fill: parent
+    }
+
+    NumberAnimation on x {
+        id: xAnimation
+        running: false
+    }
 }
+
 
 

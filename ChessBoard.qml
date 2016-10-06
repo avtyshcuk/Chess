@@ -1,29 +1,9 @@
 import QtQuick 2.0
 
-
 Item {
     id: root
     anchors.fill: parent
     property int boardSize: 8
-
-    function putPiece(index, color, piece) {
-        var component = Qt.createComponent("Piece.qml");
-        if (component.status == Component.Ready) {
-            var piece = color + "_" + piece + ".png";
-            component.createObject(repeater.itemAt(index), {"source": piece});
-        }
-    }
-
-    function getIndexFromPosition(position) {
-        var x = position.charCodeAt(0) - 'a'.charCodeAt(0);
-        var y = boardSize - Number(position[1]);
-
-        return y * boardSize + x;
-    }
-
-    PositionStorage {
-        id: storage
-    }
 
     Grid {
         id: chessGrid
@@ -36,9 +16,9 @@ Item {
             model: boardSize * boardSize
 
             Rectangle {
-                id: rect
-                width: chessGrid.width / boardSize
-                height: chessGrid.height / boardSize
+                id: gridRect
+                width: internal.cellWidth
+                height: internal.cellHeight
 
                 property color black: "#612700"
                 property color white: "#ECB589"
@@ -50,10 +30,52 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-
+                        internal.movePiece(0, index);
                     }
                 }
             }
+        }
+    }
+
+    Repeater {
+        model: pieceModel
+
+        delegate: Piece {
+            x: (pieceIndex % boardSize) * internal.cellWidth
+            y: Math.floor(pieceIndex / boardSize) * internal.cellHeight
+            width: internal.cellWidth
+            height: internal.cellHeight
+            source: color + "_" + piece + ".png";
+        }
+    }
+
+    ListModel {
+        id: pieceModel
+    }
+
+    PositionStorage {
+        id: storage
+    }
+
+    QtObject {
+        id: internal
+
+        property real cellWidth: chessGrid.width / boardSize
+        property real cellHeight: chessGrid.height / boardSize
+
+        function movePiece(fromIndex, toIndex) {
+            for (var i = 0; i < pieceModel.count; ++i) {
+                if (pieceModel.get(i).pieceIndex === fromIndex) {
+                    pieceModel.get(i).pieceIndex = toIndex;
+                }
+            }
+        }
+
+        function getIndexFromPosition(position) {
+            var x = position.charCodeAt(0) - 'a'.charCodeAt(0);
+            var y = boardSize - Number(position[1]);
+
+            return y * boardSize + x;
         }
     }
 
@@ -62,7 +84,8 @@ Item {
         for (var color in initialPosition) {
             for (var position in initialPosition[color]) {
                 var piece = initialPosition[color][position];
-                putPiece(getIndexFromPosition(position), color, piece);
+                var index = internal.getIndexFromPosition(position);
+                pieceModel.append({"pieceIndex": index, "color": color, "piece": piece});
             }
         }
     }

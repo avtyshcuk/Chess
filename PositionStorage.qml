@@ -25,12 +25,4 @@ Settings {
             'h8':'rook', 'h7':'pawn'
         }
     }
-
-    function getInitialPosition() {
-        var piecePositions = [];
-
-
-
-        return piecePositions;
-    }
 }
