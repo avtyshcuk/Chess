@@ -9,11 +9,6 @@ Item {
         id: pieceImage
         anchors.fill: parent
     }
-
-    NumberAnimation on x {
-        id: xAnimation
-        running: false
-    }
 }
 
 
