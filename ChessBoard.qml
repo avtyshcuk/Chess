@@ -5,11 +5,8 @@ Item {
     anchors.fill: parent
     property int boardSize: 8
 
-    QtObject {
-        id: gameManager
-
-        property string moveColor: 'white'
-        property int firstClickIndex: -1
+    PieceMoveLogic {
+        id: logic
     }
 
     Grid {
@@ -37,46 +34,42 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        var piece = internal.getPieceByIndex(index);
-                        if (piece === 'undefined') {
-                            return;
-                        }
-
-                        if (statesID.state == 'initState') {
-                            if (gameManager.moveColor === piece.color) {
-                                gridRect.border.color = "red";
-                                statesID.state = 'firstClick';
-                                gameManager.firstClickIndex = index;
+                        switch (gameManager.state) {
+                        case 'initState':
+                            var piece = internal.getPieceByIndex(index);
+                            if (piece === undefined) {
+                                break;
                             }
-                        } else if (statesID.state == 'firstClick') {
+                            if (gameManager.moveColor !== piece.color) {
+                                break;
+                            }
+                            internal.highlightRect(gridRect, 'yellow');
+
+                            // Show possible moves
+                            var moves = logic.getValidMoves(index, piece.piece, piece.color);
+                            for (var i = 0; i < moves.length; i++) {
+                                var rect = repeater.itemAt(moves[i]);
+                                internal.highlightRect(rect, 'green');
+                            }
+
+                            gameManager.validMoves = moves;
+                            gameManager.firstClickIndex = index;
+                            gameManager.state = 'firstClickState';
+                            break;
+
+                        case 'firstClickState':
+                            if (gameManager.validMoves.indexOf(index) === -1) {
+                                break;
+                            }
+
                             internal.movePiece(gameManager.firstClickIndex, index);
-                            statesID.state = 'initState';
+                            gameManager.state = 'initState';
+                            break;
                         }
                     }
                 }
             }
         }
-    }
-
-    StateGroup {
-        id: statesID
-
-        state: 'initState'
-        states: [
-            State {
-                name: 'initState'
-                PropertyChanges {
-                    target: gameManager
-//                    moveColor: 'black'/*moveColor == 'white' ? 'black' : 'white'*/
-                }
-            },
-            State {
-                name: 'firstClickState'
-                PropertyChanges {
-                    target: gameManager
-                }
-            }
-        ]
     }
 
     Repeater {
@@ -101,6 +94,11 @@ Item {
 
                 onStopped: {
                     pieceModel.get(index).pieceIndex = toIndex;
+
+                    internal.removeRectHighlight(repeater.itemAt(gameManager.firstClickIndex));
+                    for (var i = 0; i < gameManager.validMoves.length; i++) {
+                        internal.removeRectHighlight(repeater.itemAt(gameManager.validMoves[i]));
+                    }
                 }
             }
         }
@@ -112,6 +110,10 @@ Item {
 
     PositionStorage {
         id: storage
+    }
+
+    GameManager {
+        id: gameManager
     }
 
     QtObject {
@@ -152,6 +154,15 @@ Item {
             var y = boardSize - Number(position[1]);
 
             return y * boardSize + x;
+        }
+
+        function highlightRect(rect, color) {
+            rect.border.width = 3;
+            rect.border.color = color;
+        }
+
+        function removeRectHighlight(rect) {
+            rect.border.width = 0;
         }
     }
 

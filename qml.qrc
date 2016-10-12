@@ -4,5 +4,7 @@
         <file>ChessBoard.qml</file>
         <file>Piece.qml</file>
         <file>PositionStorage.qml</file>
+        <file>GameManager.qml</file>
+        <file>PieceMoveLogic.qml</file>
     </qresource>
 </RCC>
