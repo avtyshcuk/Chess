@@ -22,4 +22,5 @@ StateGroup {
     property string moveColor: 'black'
     property int firstClickIndex: -1
     property var validMoves: []
+    property var attackMoves: []
 }

@@ -7,6 +7,7 @@ Item {
 
     PieceMoveLogic {
         id: logic
+        pieceModel: pieceModel
     }
 
     Grid {
@@ -52,13 +53,22 @@ Item {
                                 internal.highlightRect(rect, 'green');
                             }
 
+                            // Show attack moves
+                            for (var j = 0; j < logic.attackMoves.length; j++) {
+                                var attackRect = repeater.itemAt(logic.attackMoves[j]);
+                                internal.highlightRect(attackRect, 'red');
+                            }
+
                             gameManager.validMoves = moves;
+                            gameManager.attackMoves = logic.attackMoves;
+                            logic.attackMoves = [];
                             gameManager.firstClickIndex = index;
                             gameManager.state = 'firstClickState';
                             break;
 
                         case 'firstClickState':
-                            if (gameManager.validMoves.indexOf(index) === -1) {
+                            if (gameManager.validMoves.indexOf(index) === -1
+                                    && gameManager.attackMoves.indexOf(index) === -1) {
                                 break;
                             }
 
@@ -93,12 +103,25 @@ Item {
                 NumberAnimation { target: pieceID; property: "y"; to: internal.getYFromIndex(toIndex); }
 
                 onStopped: {
+                    if (gameManager.attackMoves.indexOf(toIndex) !== -1) {
+                        for (var j = 0; j < pieceModel.count; ++j) {
+                            if (pieceModel.get(j).pieceIndex === toIndex) {
+                                pieceModel.remove(j);
+                                break;
+                            }
+                        }
+                    }
+
                     pieceModel.get(index).pieceIndex = toIndex;
 
                     internal.removeRectHighlight(repeater.itemAt(gameManager.firstClickIndex));
                     for (var i = 0; i < gameManager.validMoves.length; i++) {
                         internal.removeRectHighlight(repeater.itemAt(gameManager.validMoves[i]));
                     }
+                    for (var k = 0; k < gameManager.attackMoves.length; k++) {
+                        internal.removeRectHighlight(repeater.itemAt(gameManager.attackMoves[k]));
+                    }
+                    gameManager.attackMoves = [];
                 }
             }
         }
@@ -132,7 +155,6 @@ Item {
         }
 
         function movePiece(fromIndex, toIndex) {
-//            var piece = getPieceByIndex(fromIndex)
             for (var i = 0; i < pieceModel.count; ++i) {
                 if (pieceModel.get(i).pieceIndex === fromIndex) {
                     pieceRepeater.itemAt(i).toIndex = toIndex;
