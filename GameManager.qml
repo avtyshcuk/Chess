@@ -21,6 +21,19 @@ StateGroup {
     // Initial color 'black' will be reverted in init state
     property string moveColor: 'black'
     property int firstClickIndex: -1
-    property var validMoves: []
-    property var attackMoves: []
+    property var pieceModel: []
+    property var possibleMoves: logic.possibleMoves
+    property var attackMoves: logic.attackMoves
+
+    function hasPieceMoves() {
+        return possibleMoves.length !== 0 || attackMoves.length !== 0;
+    }
+
+    function getPossibleMoves(index, piece) {
+        logic.getPossibleMoves(index, piece);
+    }
+
+    property var logic: PieceMoveLogic {
+        pieceModel: gameManager.pieceModel
+    }
 }

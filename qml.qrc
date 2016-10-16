@@ -6,5 +6,6 @@
         <file>PositionStorage.qml</file>
         <file>GameManager.qml</file>
         <file>PieceMoveLogic.qml</file>
+        <file>Global.js</file>
     </qresource>
 </RCC>

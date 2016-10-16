@@ -1,14 +1,10 @@
 import QtQuick 2.0
+import "Global.js" as Global
 
 Item {
     id: root
     anchors.fill: parent
-    property int boardSize: 8
-
-    PieceMoveLogic {
-        id: logic
-        pieceModel: pieceModel
-    }
+    property int boardSize: Global.boardSize
 
     Grid {
         id: chessGrid
@@ -37,40 +33,32 @@ Item {
                     onClicked: {
                         switch (gameManager.state) {
                         case 'initState':
-                            var piece = internal.getPieceByIndex(index);
-                            if (piece === undefined) {
+                            // Empty cell is wrong first move
+                            if (!Global.isCellOccupied(pieceModel, index)) {
                                 break;
                             }
-                            if (gameManager.moveColor !== piece.color) {
+
+                            // Not correct if piece is not belong to us
+                            var piece = Global.getPieceByIndex(pieceModel, index);
+                            if (!Global.isSameColor(piece.color, gameManager.moveColor)) {
                                 break;
                             }
-                            internal.highlightRect(gridRect, 'yellow');
 
-                            // Show possible moves
-                            var moves = logic.getValidMoves(index, piece.piece, piece.color);
-                            for (var i = 0; i < moves.length; i++) {
-                                var rect = repeater.itemAt(moves[i]);
-                                internal.highlightRect(rect, 'green');
+                            // Let's find possible moves
+                            gameManager.getPossibleMoves(index, piece);
+                            if (!gameManager.hasPieceMoves()) {
+                                gameManager.state = 'initState';
+                                break;
                             }
 
-                            // Show attack moves
-                            for (var j = 0; j < logic.attackMoves.length; j++) {
-                                var attackRect = repeater.itemAt(logic.attackMoves[j]);
-                                internal.highlightRect(attackRect, 'red');
-                            }
-
-                            gameManager.validMoves = moves;
-                            gameManager.attackMoves = logic.attackMoves;
-                            logic.attackMoves = [];
                             gameManager.firstClickIndex = index;
+                            internal.highlightRects();
                             gameManager.state = 'firstClickState';
                             break;
 
                         case 'firstClickState':
-                            if (gameManager.validMoves.indexOf(index) === -1
-                                    && gameManager.attackMoves.indexOf(index) === -1) {
-                                break;
-                            }
+                            var modelIndex = Global.getModelIndex(pieceModel, gameManager.firstClickIndex);
+                            pieceModel.setProperty(modelIndex, "wasMoved", true);
 
                             internal.movePiece(gameManager.firstClickIndex, index);
                             gameManager.state = 'initState';
@@ -103,25 +91,13 @@ Item {
                 NumberAnimation { target: pieceID; property: "y"; to: internal.getYFromIndex(toIndex); }
 
                 onStopped: {
-                    if (gameManager.attackMoves.indexOf(toIndex) !== -1) {
-                        for (var j = 0; j < pieceModel.count; ++j) {
-                            if (pieceModel.get(j).pieceIndex === toIndex) {
-                                pieceModel.remove(j);
-                                break;
-                            }
-                        }
+                    var modelIndex = Global.getModelIndex(pieceModel, toIndex);
+                    if (modelIndex !== -1) {
+                        pieceModel.remove(modelIndex);
                     }
-
                     pieceModel.get(index).pieceIndex = toIndex;
 
-                    internal.removeRectHighlight(repeater.itemAt(gameManager.firstClickIndex));
-                    for (var i = 0; i < gameManager.validMoves.length; i++) {
-                        internal.removeRectHighlight(repeater.itemAt(gameManager.validMoves[i]));
-                    }
-                    for (var k = 0; k < gameManager.attackMoves.length; k++) {
-                        internal.removeRectHighlight(repeater.itemAt(gameManager.attackMoves[k]));
-                    }
-                    gameManager.attackMoves = [];
+                    internal.removeHighlights();
                 }
             }
         }
@@ -137,6 +113,7 @@ Item {
 
     GameManager {
         id: gameManager
+        pieceModel: pieceModel
     }
 
     QtObject {
@@ -144,15 +121,6 @@ Item {
 
         property real cellWidth: chessGrid.width / boardSize
         property real cellHeight: chessGrid.height / boardSize
-
-        function getPieceByIndex(index) {
-            for (var i = 0; i < pieceModel.count; ++i) {
-                var piece = pieceModel.get(i);
-                if (piece.pieceIndex === index) {
-                    return piece;
-                }
-            }
-        }
 
         function movePiece(fromIndex, toIndex) {
             for (var i = 0; i < pieceModel.count; ++i) {
@@ -178,13 +146,32 @@ Item {
             return y * boardSize + x;
         }
 
-        function highlightRect(rect, color) {
-            rect.border.width = 3;
-            rect.border.color = color;
+        function highlightRects() {
+            var width = 3;
+            for (var i = 0; i < gameManager.possibleMoves.length; i++) {
+                var rect1 = repeater.itemAt(gameManager.possibleMoves[i]);
+                rect1.border.width = width;
+                rect1.border.color = 'green';
+            }
+            for (var j = 0; j < gameManager.attackMoves.length; j++) {
+                var rect2 = repeater.itemAt(gameManager.attackMoves[j]);
+                rect2.border.width = width;
+                rect2.border.color = 'red';
+            }
+
+            var rect3 = repeater.itemAt(gameManager.firstClickIndex);
+            rect3.border.width = 3;
+            rect3.border.color = 'yellow';
         }
 
-        function removeRectHighlight(rect) {
-            rect.border.width = 0;
+        function removeHighlights() {
+            var rects = gameManager.possibleMoves.concat(
+                        gameManager.attackMoves,
+                        [gameManager.firstClickIndex]);
+            for (var i = 0; i < rects.length; i++) {
+                var rect = repeater.itemAt(rects[i]);
+                rect.border.width = 0;
+            }
         }
     }
 

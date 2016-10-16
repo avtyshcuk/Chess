@@ -1,120 +1,110 @@
 import QtQml 2.2
+import "Global.js" as Global
 
 QtObject {
     id: pieceMoveLogic
 
+    property int boardSize: Global.boardSize
     property var pieceModel: []
-
+    property var possibleMoves: []
     property var attackMoves: []
-
-    property int boardSize: 8
     property var moveRules: {
-        'white_pawn': [[2, 0, -1]],
-
-        'black_pawn': [[2, 0, 1]],
-
-        'knight': [[-2, -1], [ -2, 1],
-                   [-1, -2], [-1, 2],
-                   [2, -1], [2, 1],
-                   [1, -2], [1, 2]],
-
+        'white_pawn': [2, 0, -1],
+        'black_pawn': [2, 0, 1],
+        'knight': [[1, -2, -1], [1, -2, 1],
+                   [1, -1, -2], [1, -1, 2],
+                   [1, 2, -1], [1, 2, 1],
+                   [1, 1, -2], [1, 1, 2]],
         'bishop': [[boardSize, -1, -1], [boardSize, 1, -1],
                    [boardSize, -1, 1], [boardSize, 1, 1]],
-
         'rook': [[boardSize, 0, -1], [boardSize, 0, 1],
                  [boardSize, -1, 0], [boardSize, 1, 0]],
-
         'queen': [[boardSize, 0, -1], [boardSize, 0, 1],
                   [boardSize, -1, 0], [boardSize, 1, 0],
                   [boardSize, -1, -1], [boardSize, 1, -1],
                   [boardSize, -1, 1], [boardSize, 1, 1]],
-
         'king': [[1, 0, -1], [1, 0, 1],
                  [1, -1, 0], [1, 1, 0],
                  [1, -1, -1], [1, 1, -1],
                  [1, -1, 1], [1, 1, 1]]
     }
 
-    function isValidIndex(x, y) {
-        return x >= 0 && x < boardSize && y >= 0 && y < boardSize;
-    }
+    function getPossibleMoves(index, piece) {
+        possibleMoves = [];
+        attackMoves = [];
 
-    function getPieceByIndex(index) {
-        for (var i = 0; i < pieceModel.count; ++i) {
-            var piece = pieceModel.get(i);
-            if (piece.pieceIndex === index) {
-                return piece;
-            }
-        }
-    }
+        var pieceX = index % Global.boardSize;
+        var pieceY = Math.floor(index / Global.boardSize);
 
-    function getValidMoves(index, piece, color) {
-        var validMoves = [];
-
-        var pieceX = index % boardSize;
-        var pieceY = Math.floor(index / boardSize);
-        var pieceName = piece === 'pawn' ? color + '_' + piece : piece;
+        var color = piece.color;
+        var pieceName = piece.piece === 'pawn' ? color + '_' + piece.piece : piece.piece;
         var pieceRules = moveRules[pieceName];
 
-        if (pieceName === 'knight') {
-            return getKnightMoves(pieceX, pieceY, pieceRules, color);
+        if (piece.piece === 'pawn') {
+            return getPawnMoves(pieceX, pieceY, piece, pieceRules);
         }
 
         for (var i = 0; i < pieceRules.length; i++) {
-            var x = pieceX;
-            var y = pieceY;
-            for (var count = 0; count < pieceRules[i][0]; count++) {
-                x += pieceRules[i][1];
-                y += pieceRules[i][2];
+            for (var j = 1; j <= pieceRules[i][0]; j++) {
+                var x = pieceX + j * pieceRules[i][1];
+                var y = pieceY + j * pieceRules[i][2];
 
-                if (!isValidIndex(x, y)) {
+                if (!Global.isValidIndex(x, y)) {
                     break;
                 }
 
                 var newIndex = y * boardSize + x;
-                if (isOccupiedPosition(newIndex, color)) {
+
+                if (Global.isCellOccupied(pieceModel, newIndex)) {
+                    var otherPiece = Global.getPieceByIndex(pieceModel, newIndex);
+
+                    // Cell is occupied with enemy
+                    if (!Global.isSameColor(otherPiece.color, color)) {
+                        attackMoves.push(newIndex);
+                    }
                     break;
                 }
 
-                validMoves.push(newIndex);
+                possibleMoves.push(newIndex);
             }
         }
-        return validMoves;
     }
 
-    function getKnightMoves(x, y, pieceRules, color) {
-        var validMoves = [];
-        for (var i = 0; i < pieceRules.length; i++) {
-            var newX = x + pieceRules[i][0];
-            var newY = y + pieceRules[i][1];
+    function getPawnMoves(x, y, piece, pieceRules) {
+        var maxMove = piece.wasMoved !== true ? pieceRules[0] : pieceRules[0] - 1;
 
-            if (!isValidIndex(newX, newY)) {
-                continue;
+        for (var i = 1; i <= maxMove; i++) {
+            var newX = x + i * pieceRules[1];
+            var newY = y + i * pieceRules[2];
+
+            if (!Global.isValidIndex(newX, newY)) {
+                break;
             }
 
             var newIndex = newY * boardSize + newX;
-            if (isOccupiedPosition(newIndex, color)) {
-                continue;
+
+            if (Global.isCellOccupied(pieceModel, newIndex)) {
+                break;
             }
 
-            validMoves.push(newIndex);
+            possibleMoves.push(newIndex);
         }
-        return validMoves;
-    }
 
-    function isOccupiedPosition(newIndex, color) {
-        var otherPiece = getPieceByIndex(newIndex);
-        if (otherPiece !== undefined) {
-            if (otherPiece.color === color) {
-                return true;
-            }
+        var xAttack = [x + 1, x - 1];
+        var yAttack = y + pieceRules[2];
 
-            var oppositeColor = color === 'white' ? 'black' : 'white';
-            if (otherPiece.color === oppositeColor) {
-                attackMoves.push(newIndex);
-                return true;
+        for (var j = 0; j < xAttack.length; j++) {
+            if (Global.isValidIndex(xAttack[j], yAttack)) {
+                var attackIndex1 = yAttack * boardSize + xAttack[j];
+                if (Global.isCellOccupied(pieceModel, attackIndex1)) {
+                    var attackPiece1 = Global.getPieceByIndex(pieceModel, attackIndex1);
+                    if (!Global.isSameColor(attackPiece1.color, piece.color)) {
+                        attackMoves.push(attackIndex1);
+                    }
+                }
             }
         }
-        return false;
     }
 }
+
+
