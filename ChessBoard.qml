@@ -53,6 +53,7 @@ Item {
 
                             gameManager.firstClickIndex = index;
                             internal.highlightRects();
+                            gameManager.currentPiece = piece;
                             gameManager.state = 'firstClickState';
                             break;
 
@@ -61,6 +62,7 @@ Item {
                             pieceModel.setProperty(modelIndex, "wasMoved", true);
 
                             internal.movePiece(gameManager.firstClickIndex, index);
+                            gameManager.secondClickIndex = index;
                             gameManager.state = 'initState';
                             break;
                         }
@@ -98,6 +100,7 @@ Item {
                     pieceModel.get(index).pieceIndex = toIndex;
 
                     internal.removeHighlights();
+                    internal.handlePawnInPassing(toIndex);
                 }
             }
         }
@@ -144,6 +147,27 @@ Item {
             var y = boardSize - Number(position[1]);
 
             return y * boardSize + x;
+        }
+
+        function handlePawnInPassing(toIndex) {
+            // In passing capture is possible only for pawns
+            var capture = gameManager.captureField;
+            var isAttackColor = gameManager.moveColor === gameManager.captureField.color;
+            if (toIndex === capture.index && isAttackColor) {
+                if (gameManager.currentPiece.piece === 'pawn') {
+                    var modelIndex = Global.getModelIndex(pieceModel, capture.captureIndex);
+                    pieceModel.remove(modelIndex);
+                    gameManager.captureField.index = -1;
+                }
+            }
+
+            // In passing pawn capture works only once
+            // and only if pawn moved two ranks forward
+            if (isAttackColor) {
+                gameManager.captureField.index = -1;
+            } else if (toIndex !== capture.captureIndex) {
+                gameManager.captureField.index = -1;
+            }
         }
 
         function highlightRects() {

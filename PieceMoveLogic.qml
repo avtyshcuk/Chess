@@ -8,6 +8,7 @@ QtObject {
     property var pieceModel: []
     property var possibleMoves: []
     property var attackMoves: []
+    property var captureField: {'index': -1, 'color': '', 'captureIndex': -1}
     property var moveRules: {
         'white_pawn': [2, 0, -1],
         'black_pawn': [2, 0, 1],
@@ -90,16 +91,38 @@ QtObject {
             possibleMoves.push(newIndex);
         }
 
+        if (captureField.index !== -1) {
+            attackMoves.push(captureField.index);
+        }
+
         var xAttack = [x + 1, x - 1];
         var yAttack = y + pieceRules[2];
 
         for (var j = 0; j < xAttack.length; j++) {
             if (Global.isValidIndex(xAttack[j], yAttack)) {
-                var attackIndex1 = yAttack * boardSize + xAttack[j];
-                if (Global.isCellOccupied(pieceModel, attackIndex1)) {
-                    var attackPiece1 = Global.getPieceByIndex(pieceModel, attackIndex1);
-                    if (!Global.isSameColor(attackPiece1.color, piece.color)) {
-                        attackMoves.push(attackIndex1);
+                var attackIndex = yAttack * boardSize + xAttack[j];
+
+                if (Global.isCellOccupied(pieceModel, attackIndex)) {
+                    var attackPiece = Global.getPieceByIndex(pieceModel, attackIndex);
+
+                    if (!Global.isSameColor(attackPiece.color, piece.color)) {
+                        attackMoves.push(attackIndex);
+                    }
+                }
+            }
+
+            // If move is long "in passing capture" is possible
+            if (possibleMoves.length == 2) {
+                var captureIndex = (yAttack + pieceRules[2]) * boardSize + xAttack[j];
+
+                if (Global.isCellOccupied(pieceModel, captureIndex)) {
+                    var capturePiece = Global.getPieceByIndex(pieceModel, captureIndex);
+
+                    if (!Global.isSameColor(capturePiece.color, piece.color)
+                            && capturePiece.piece === 'pawn') {
+                        captureField.index = yAttack  * boardSize + x;
+                        captureField.color = piece.color;
+                        captureField.captureIndex = newIndex;
                     }
                 }
             }
