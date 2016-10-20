@@ -28,11 +28,22 @@ Item {
                 color: isFirstCellWhite ? (indexParity ? white : black) :
                                           (indexParity ? black : white)
 
+                Text {
+                    anchors.fill: parent
+                    text: index
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
                         switch (gameManager.state) {
                         case 'initState':
+                            if (gameManager.logic.isCellAttacked(index, gameManager.moveColor)) {
+                                console.log('attacked')
+                                var rect1 = repeater.itemAt(index);
+                                rect1.border.width = 6;
+                                rect1.border.color = 'purple';
+                            }
                             // Empty cell is wrong first move
                             if (!Global.isCellOccupied(pieceModel, index)) {
                                 break;
@@ -58,6 +69,10 @@ Item {
                             break;
 
                         case 'firstClickState':
+                            if (gameManager.possibleMoves.indexOf(index) === -1
+                                    && gameManager.attackMoves.indexOf(index) === -1) {
+                                break;
+                            }
                             var modelIndex = Global.getModelIndex(pieceModel, gameManager.firstClickIndex);
                             pieceModel.setProperty(modelIndex, "wasMoved", true);
 

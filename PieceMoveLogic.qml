@@ -128,6 +128,64 @@ QtObject {
             }
         }
     }
+
+    function isCellAttacked(index, color) {
+        // TODO: make function for x,y from index
+        var xCell = index % Global.boardSize;
+        var yCell = Math.floor(index / Global.boardSize);
+
+        // Check if cell is under pawn attack
+        var pawnName = color + '_' + 'pawn';
+        var pieceRules = moveRules[pawnName];
+        var xAttack = [xCell + 1, xCell - 1];
+        var yAttack = yCell + pieceRules[2];
+
+        for (var j = 0; j < xAttack.length; j++) {
+            if (Global.isValidIndex(xAttack[j], yAttack)) {
+                var attackIndex = yAttack * boardSize + xAttack[j];
+
+                if (Global.isCellOccupied(pieceModel, attackIndex)) {
+                    var attackPiece = Global.getPieceByIndex(pieceModel, attackIndex);
+
+                    if (!Global.isSameColor(attackPiece.color, color) && attackPiece.piece === 'pawn') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        var attackPieces = [['bishop', 'queen'], ['rook', 'queen'], ['knight'], ['king']];
+        for (var i = 0; i < attackPieces.length; i++) {
+            pieceRules = moveRules[attackPieces[i][0]];
+            for (var j = 0; j < pieceRules.length; j++)
+            for (var k = 1; k <= pieceRules[j][0]; k++) {
+                var x = xCell + k * pieceRules[j][1];
+                var y = yCell + k * pieceRules[j][2];
+
+                if (!Global.isValidIndex(x, y)) {
+                    break;
+                }
+
+                var newIndex = y * boardSize + x;
+
+                if (Global.isCellOccupied(pieceModel, newIndex)) {
+                    var otherPiece = Global.getPieceByIndex(pieceModel, newIndex);
+
+                    // Cell is occupied with enemy
+                    if (!Global.isSameColor(otherPiece.color, color)) {
+                        for (var p = 0; p < attackPieces[i].length; p++) {
+                            if (otherPiece.piece === attackPieces[i][p]) {
+                                return true;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return false;
+    }
 }
 
 
