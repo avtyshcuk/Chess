@@ -28,22 +28,16 @@ Item {
                 color: isFirstCellWhite ? (indexParity ? white : black) :
                                           (indexParity ? black : white)
 
-                Text {
-                    anchors.fill: parent
-                    text: index
-                }
+//                Text {
+//                    anchors.fill: parent
+//                    text: index
+//                }
 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
                         switch (gameManager.state) {
                         case 'initState':
-                            if (gameManager.logic.isCellAttacked(index, gameManager.moveColor)) {
-                                console.log('attacked')
-                                var rect1 = repeater.itemAt(index);
-                                rect1.border.width = 6;
-                                rect1.border.color = 'purple';
-                            }
                             // Empty cell is wrong first move
                             if (!Global.isCellOccupied(pieceModel, index)) {
                                 break;
@@ -87,46 +81,15 @@ Item {
         }
     }
 
-    Repeater {
+    PieceView {
         id: pieceRepeater
         model: pieceModel
-
-        delegate: Piece {
-            id: pieceID
-            x: internal.getXFromIndex(pieceIndex)
-            y: internal.getYFromIndex(pieceIndex)
-            width: internal.cellWidth
-            height: internal.cellHeight
-            source: color + "_" + piece + ".png";
-
-            property int toIndex: 0
-            property alias animationRunning: positionAnimation.running
-
-            ParallelAnimation {
-                id: positionAnimation
-                NumberAnimation { target: pieceID; property: "x"; to: internal.getXFromIndex(toIndex); }
-                NumberAnimation { target: pieceID; property: "y"; to: internal.getYFromIndex(toIndex); }
-
-                onStopped: {
-                    var modelIndex = Global.getModelIndex(pieceModel, toIndex);
-                    if (modelIndex !== -1) {
-                        pieceModel.remove(modelIndex);
-                    }
-                    pieceModel.get(index).pieceIndex = toIndex;
-
-                    internal.removeHighlights();
-                    internal.handlePawnInPassing(toIndex);
-                }
-            }
-        }
+        cellWidth: internal.cellWidth
+        cellHeight: internal.cellHeight
     }
 
-    ListModel {
+    PieceModel {
         id: pieceModel
-    }
-
-    PositionStorage {
-        id: storage
     }
 
     GameManager {
@@ -147,21 +110,6 @@ Item {
                     pieceRepeater.itemAt(i).animationRunning = true;
                 }
             }
-        }
-
-        function getXFromIndex(index) {
-            return (index % boardSize) * internal.cellWidth;
-        }
-
-        function getYFromIndex(index) {
-            return Math.floor(index / boardSize) * internal.cellHeight;
-        }
-
-        function getIndexFromPosition(position) {
-            var x = position.charCodeAt(0) - 'a'.charCodeAt(0);
-            var y = boardSize - Number(position[1]);
-
-            return y * boardSize + x;
         }
 
         function handlePawnInPassing(toIndex) {
@@ -210,18 +158,6 @@ Item {
             for (var i = 0; i < rects.length; i++) {
                 var rect = repeater.itemAt(rects[i]);
                 rect.border.width = 0;
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        var initialPosition = storage.initialPosition
-        for (var color in initialPosition) {
-            for (var position in initialPosition[color]) {
-                var piece = initialPosition[color][position];
-                var index = internal.getIndexFromPosition(position);
-
-                pieceModel.append({"pieceIndex": index, "color": color, "piece": piece});
             }
         }
     }

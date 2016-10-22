@@ -6,8 +6,17 @@ function isValidIndex(x, y) {
 }
 
 function isCellOccupied(model, index) {
-    for (var i = 0; i < pieceModel.count; i++) {
-        if (pieceModel.get(i).pieceIndex === index) {
+    for (var i = 0; i < model.count; i++) {
+        if (model.get(i).pieceIndex === index) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isCellPossibleOccupied(possibleModel, index) {
+    for (var i = 0; i < possibleModel.length; i++) {
+        if (possibleModel[i].pieceIndex === index) {
             return true;
         }
     }
@@ -16,7 +25,7 @@ function isCellOccupied(model, index) {
 
 function getModelIndex(model, positionIndex) {
     for (var i = 0; i < model.count; i++) {
-        if (pieceModel.get(i).pieceIndex === positionIndex) {
+        if (model.get(i).pieceIndex === positionIndex) {
             return i;
         }
     }
@@ -24,12 +33,41 @@ function getModelIndex(model, positionIndex) {
 }
 
 function getPieceByIndex(model, index) {
-    for (var i = 0; i < pieceModel.count; i++) {
-        var piece = pieceModel.get(i);
+    for (var i = 0; i < model.count; i++) {
+        var piece = model.get(i);
         if (piece.pieceIndex === index) {
             return piece;
         }
     }
+}
+
+function getPossiblePieceByIndex(possibleModel, index) {
+    for (var i = 0; i < possibleModel.length; i++) {
+        var piece = possibleModel[i];
+        if (piece.pieceIndex === index) {
+            return piece;
+        }
+    }
+}
+
+function getPieceIndex(model, pieceName, color) {
+    for (var i = 0; i < model.count; i++) {
+        var piece = model.get(i);
+        if (piece.piece === pieceName && piece.color === color) {
+            return piece.pieceIndex;
+        }
+    }
+    return -1;
+}
+
+function getPossiblePieceIndex(model, pieceName, color) {
+    for (var i = 0; i < model.length; i++) {
+        var piece = model[i];
+        if (piece.piece === pieceName && piece.color === color) {
+            return piece.pieceIndex;
+        }
+    }
+    return -1;
 }
 
 function isSameColor(color1, color2) {

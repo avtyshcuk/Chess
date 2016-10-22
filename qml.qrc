@@ -7,5 +7,7 @@
         <file>GameManager.qml</file>
         <file>PieceMoveLogic.qml</file>
         <file>Global.js</file>
+        <file>PieceModel.qml</file>
+        <file>PieceView.qml</file>
     </qresource>
 </RCC>
