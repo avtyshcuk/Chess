@@ -1,4 +1,5 @@
-import QtQuick 2.0
+import QtQuick 2.2
+import QtQuick.Dialogs 1.1
 import "Global.js" as Global
 
 Repeater {
@@ -6,6 +7,17 @@ Repeater {
 
     property real cellWidth: 0
     property real cellHeight: 0
+
+    property MessageDialog dialog: MessageDialog {
+        id: messageDialog
+        title: "May I have your attention please"
+        text: "It's so cool that you are using Qt Quick."
+        onAccepted: {
+            console.log("And of course you could only agree.")
+//            Qt.quit()
+        }
+
+    }
 
     delegate: Piece {
         id: pieceID
@@ -30,8 +42,13 @@ Repeater {
                 }
                 pieceModel.get(index).pieceIndex = toIndex;
 
-                internal.removeHighlights();
-                internal.handlePawnInPassing(toIndex);
+                handlePawnInPassing(toIndex);
+
+                gameManager.isKingInCheck = gameManager.logic.isKingInCheck(gameManager.moveColor);
+
+                if (gameManager.isKingInCheck && !gameManager.logic.isNextMovePossible(gameManager.moveColor)) {
+                    dialog.open();
+                }
             }
         }
     }
@@ -42,5 +59,26 @@ Repeater {
 
     function getYFromIndex(index) {
         return Math.floor(index / Global.boardSize) * cellHeight;
+    }
+
+    function handlePawnInPassing(toIndex) {
+        // In passing capture is possible only for pawns
+        var capture = gameManager.captureField;
+        var isAttackColor = gameManager.moveColor === capture.color;
+        if (toIndex === capture.index && isAttackColor) {
+            if (gameManager.currentPiece.piece === 'pawn') {
+                var modelIndex = Global.getModelIndex(pieceModel, capture.captureIndex);
+                pieceModel.remove(modelIndex);
+                gameManager.captureField.index = -1;
+            }
+        }
+
+        // In passing pawn capture works only once
+        // and only if pawn moved two ranks forward
+        if (isAttackColor) {
+            gameManager.captureField.index = -1;
+        } else if (toIndex !== capture.captureIndex) {
+            gameManager.captureField.index = -1;
+        }
     }
 }

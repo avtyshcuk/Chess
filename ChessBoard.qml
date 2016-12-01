@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 import "Global.js" as Global
 
 Item {
@@ -28,16 +29,22 @@ Item {
                 color: isFirstCellWhite ? (indexParity ? white : black) :
                                           (indexParity ? black : white)
 
-//                Text {
-//                    anchors.fill: parent
-//                    text: index
-//                }
+                border { width: 3; color: internal.getHighlightColor(index) }
+
+                Text {
+                    anchors.fill: parent
+                    text: index
+                }
 
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
                         switch (gameManager.state) {
                         case 'initState':
+
+                            console.log(gameManager.logic.isCellUnderAttack(
+                                            Global.getPiecesFromModel(pieceModel), index, 'black'));
+
                             // Empty cell is wrong first move
                             if (!Global.isCellOccupied(pieceModel, index)) {
                                 break;
@@ -50,27 +57,29 @@ Item {
                             }
 
                             // Let's find possible moves
-                            gameManager.getPossibleMoves(index, piece);
+                            gameManager.getMoves(piece);
+
+                            // No moves, reset state and make another choice
                             if (!gameManager.hasPieceMoves()) {
                                 gameManager.state = 'initState';
                                 break;
                             }
 
                             gameManager.firstClickIndex = index;
-                            internal.highlightRects();
                             gameManager.currentPiece = piece;
                             gameManager.state = 'firstClickState';
                             break;
 
                         case 'firstClickState':
-                            if (gameManager.possibleMoves.indexOf(index) === -1
-                                    && gameManager.attackMoves.indexOf(index) === -1) {
+                            if (!gameManager.isCorrectMove(index)) {
                                 break;
                             }
+
                             var modelIndex = Global.getModelIndex(pieceModel, gameManager.firstClickIndex);
                             pieceModel.setProperty(modelIndex, "wasMoved", true);
 
                             internal.movePiece(gameManager.firstClickIndex, index);
+
                             gameManager.secondClickIndex = index;
                             gameManager.state = 'initState';
                             break;
@@ -112,53 +121,20 @@ Item {
             }
         }
 
-        function handlePawnInPassing(toIndex) {
-            // In passing capture is possible only for pawns
-            var capture = gameManager.captureField;
-            var isAttackColor = gameManager.moveColor === gameManager.captureField.color;
-            if (toIndex === capture.index && isAttackColor) {
-                if (gameManager.currentPiece.piece === 'pawn') {
-                    var modelIndex = Global.getModelIndex(pieceModel, capture.captureIndex);
-                    pieceModel.remove(modelIndex);
-                    gameManager.captureField.index = -1;
-                }
+
+
+        function getHighlightColor(index) {
+            var colors = {
+                'current': 'yellow',
+                'move': 'green',
+                'attack': 'red'
+            };
+
+            if (index in gameManager.moves) {
+                return colors[gameManager.moves[index]];
             }
 
-            // In passing pawn capture works only once
-            // and only if pawn moved two ranks forward
-            if (isAttackColor) {
-                gameManager.captureField.index = -1;
-            } else if (toIndex !== capture.captureIndex) {
-                gameManager.captureField.index = -1;
-            }
-        }
-
-        function highlightRects() {
-            var width = 3;
-            for (var i = 0; i < gameManager.possibleMoves.length; i++) {
-                var rect1 = repeater.itemAt(gameManager.possibleMoves[i]);
-                rect1.border.width = width;
-                rect1.border.color = 'green';
-            }
-            for (var j = 0; j < gameManager.attackMoves.length; j++) {
-                var rect2 = repeater.itemAt(gameManager.attackMoves[j]);
-                rect2.border.width = width;
-                rect2.border.color = 'red';
-            }
-
-            var rect3 = repeater.itemAt(gameManager.firstClickIndex);
-            rect3.border.width = 3;
-            rect3.border.color = 'yellow';
-        }
-
-        function removeHighlights() {
-            var rects = gameManager.possibleMoves.concat(
-                        gameManager.attackMoves,
-                        [gameManager.firstClickIndex]);
-            for (var i = 0; i < rects.length; i++) {
-                var rect = repeater.itemAt(rects[i]);
-                rect.border.width = 0;
-            }
+            return 'transparent';
         }
     }
 }

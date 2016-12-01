@@ -15,9 +15,9 @@ Settings {
             'h1':'rook', 'h2':'pawn'
         },
         'black': {
-            'a8':'rook', 'a7':'pawn',
-            'b8':'knight', 'b7':'pawn',
-            'c8':'bishop', 'c7':'pawn',
+//            'a8':'rook', 'a7':'pawn',
+//            'b8':'knight', 'b7':'pawn',
+//            'c8':'bishop', 'c7':'pawn',
             'd8':'queen', 'd7':'pawn',
             'e8':'king', 'e7':'pawn',
             'f8':'bishop', 'f7':'pawn',

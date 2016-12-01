@@ -11,11 +11,16 @@ StateGroup {
             StateChangeScript {
                 script: {
                     moveColor = moveColor === 'white' ? 'black' : 'white';
+                    moves = { };
                 }
             }
         },
         State {
             name: 'firstClickState'
+            StateChangeScript {
+                script: {
+                }
+            }
         }
     ]
 
@@ -25,16 +30,28 @@ StateGroup {
     property int secondClickIndex: -2
     property var currentPiece: null
     property var pieceModel: []
-    property var possibleMoves: logic.possibleMoves
+    property var moves: ({})
     property var attackMoves: logic.attackMoves
     property var captureField: logic.captureField
+    property bool isKingInCheck: false
 
     function hasPieceMoves() {
-        return possibleMoves.length !== 0 || attackMoves.length !== 0;
+        // At least one 'move' or 'attack' must be present
+        return (Object.keys(moves).length > 1);
     }
 
-    function getPossibleMoves(index, piece) {
-        logic.getPossibleMoves(index, piece);
+    function isCorrectMove(index) {
+        if (index in moves) {
+            var move = moves[index];
+            if (move === 'move' || move === 'attack') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getMoves(piece) {
+        moves = logic.getMoves(piece);
     }
 
     property var logic: PieceMoveLogic {
