@@ -44,7 +44,7 @@ Repeater {
 
                 handlePawnInPassing(toIndex);
 
-                gameManager.isKingInCheck = gameManager.logic.isKingInCheck(gameManager.moveColor);
+//                gameManager.isKingInCheck = gameManager.logic.isKingInCheck(gameManager.moveColor);
 
                 if (gameManager.isKingInCheck && !gameManager.logic.isNextMovePossible(gameManager.moveColor)) {
                     dialog.open();

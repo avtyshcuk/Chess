@@ -10,7 +10,7 @@ StateGroup {
             name: 'initState'
             StateChangeScript {
                 script: {
-                    moveColor = moveColor === 'white' ? 'black' : 'white';
+                    moveColor = Global.invertedColor(moveColor);
                     moves = { };
                 }
             }
@@ -51,7 +51,11 @@ StateGroup {
     }
 
     function getMoves(piece) {
-        moves = logic.getMoves(piece);
+        var pieces = Global.getPiecesFromModel(pieceModel);
+        moves = logic.getMoves(pieces, piece);
+
+        // Check king safety
+        moves = logic.removeKingUnsafeMoves(pieces, piece, moves);
     }
 
     property var logic: PieceMoveLogic {

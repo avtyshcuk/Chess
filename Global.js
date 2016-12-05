@@ -5,6 +5,11 @@ function isValidIndex(x, y) {
     return x >= 0 && x < boardSize && y >= 0 && y < boardSize;
 }
 
+function invertedColor(color)
+{
+    return color === 'white' ? 'black' : 'white';
+}
+
 function copyModel(model) {
     var possibleModel = [];
     for (var i = 0; i < model.count; i++) {
@@ -15,15 +20,14 @@ function copyModel(model) {
     return possibleModel;
 }
 
-function getPiecesFromModel(model) {
+function getPiecesFromModel(model)
+{
     var pieces = [];
-
     for (var i = 0; i < model.count; i++) {
         pieces.push({"pieceIndex": model.get(i).pieceIndex,
                         "color": model.get(i).color,
                         "piece": model.get(i).piece});
     }
-
     return pieces;
 }
 
@@ -44,6 +48,23 @@ function getPiece(pieces, index) {
         }
     }
 }
+
+function isPieceOnCell(pieces, piece)
+{
+    var index = piece.pieceIndex;
+    var color = piece.color
+    var name = piece.piece;
+
+    if (isCellOccupied(pieces, index)) {
+        var otherPiece = getPiece(pieces, index);
+
+        if (otherPiece.color === color && otherPiece.piece === name) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 function getSquareBorder(pieces, index) {
     var colors = {
@@ -132,8 +153,4 @@ function getPossiblePieceIndex(model, pieceName, color) {
 
 function isSameColor(color1, color2) {
     return color1 === color2;
-}
-
-function oppositeColor(color) {
-    return color === 'white' ? 'black' : 'white';
 }

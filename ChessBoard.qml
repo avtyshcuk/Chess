@@ -41,10 +41,6 @@ Item {
                     onClicked: {
                         switch (gameManager.state) {
                         case 'initState':
-
-                            console.log(gameManager.logic.isCellUnderAttack(
-                                            Global.getPiecesFromModel(pieceModel), index, 'black'));
-
                             // Empty cell is wrong first move
                             if (!Global.isCellOccupied(pieceModel, index)) {
                                 break;

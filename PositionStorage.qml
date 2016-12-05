@@ -5,7 +5,7 @@ Settings {
     id: storage
     property var initialPosition: {
         'white': {
-            'a1':'rook', 'a2':'pawn',
+            'a1':'rook', /*'a2':'pawn',*/
             'b1':'knight', 'b2':'pawn',
             'c1':'bishop', 'c2':'pawn',
             'd1':'queen', 'd2':'pawn',

@@ -32,7 +32,8 @@ QtObject {
                  [1, -1, 1], [1, 1, 1]]
     }
 
-    function hasAttackMove(pieces, index, color) {
+    function hasAttackMove(pieces, index, color)
+    {
         var piece = Global.getPiece(pieces, index);
 
         // Cell is occupied with enemy
@@ -43,13 +44,29 @@ QtObject {
         return false;
     }
 
-    function getMoves(piece)
+    function updateCaptionField(pieces, captureIndex, color, index, newIndex)
+    {
+        var pawnPiece = {
+            'pieceIndex': captureIndex,
+            'color': Global.invertedColor(color),
+            'piece': 'pawn'
+        }
+
+        if (Global.isPieceOnCell(pieces, pawnPiece)) {
+            captureField = {
+                'index': index,
+                'color': color,
+                'captureIndex': newIndex
+            }
+        }
+    }
+
+    function getMoves(pieces, piece)
     {
         var index = piece.pieceIndex;
         var name = piece.piece;
         var color = piece.color;
 
-        var pieces = Global.getPiecesFromModel(pieceModel);
         var x = index % boardSize;
         var y = Math.floor(index / boardSize);
 
@@ -88,6 +105,7 @@ QtObject {
 
                     var pawnY = y + rules[i][2];
                     var attacks = [pawnY * boardSize + (x + 1), pawnY * boardSize + (x - 1)];
+
                     for (var k = 0; k < attacks.length; k++) {
                         if (Global.isSquareOccupied(pieces, attacks[k])) {
                             if (hasAttackMove(pieces, attacks[k], color)) {
@@ -97,18 +115,11 @@ QtObject {
 
                         // If move is long "in passing capture" is possible
                         if (!piece.wasMoved) {
+
+                            // Update 'capture' field for enemy pawn move
                             var captureIndex = attacks[k] + rules[i][2] * boardSize;
-
-                            if (Global.isCellOccupied(pieces, captureIndex)) {
-                                var capturePiece = Global.getPiece(pieces, captureIndex);
-
-                                if (capturePiece.color !== color
-                                        && capturePiece.piece === 'pawn') {
-                                    captureField.index = pawnY  * boardSize + x;
-                                    captureField.color = color;
-                                    captureField.captureIndex = newIndex;
-                                }
-                            }
+                            var pawnIndex = pawnY * boardSize + x;
+                            updateCaptionField(pieces, captureIndex, color, pawnIndex, newIndex);
                         }
                     }
                 }
@@ -135,74 +146,72 @@ QtObject {
 
     function isCellUnderAttack(pieces, index, color)
     {
-        var attackColor = color === 'white' ? 'black' : 'white';
         var attackPieces = [['bishop', 'queen'], ['rook', 'queen'], ['knight'], ['king'], ['pawn']];
         for (var i = 0; i < attackPieces.length; i++) {
             var piece = {
                 'pieceIndex': index,
                 'piece': attackPieces[i][0],
-                'color': attackColor,
+                'color': color,
                 'wasMoved': true
             };
 
-            var moves = getMoves(piece);
-            for (var fields in moves) {
-                if (moves[fields] === 'attack') {
-                    var attackPiece = Global.getPiece(pieces, fields);
+            var moves = getMoves(pieces, piece);
+
+            for (var field in moves) {
+                if (moves[field] === 'attack') {
+                    // Same piece type we can attack, also can attack us
+                    var attackPiece = Global.getPiece(pieces, field);
+
                     if (attackPieces[i].indexOf(attackPiece.piece) !== -1) {
                         return true;
                     }
                 }
             }
         }
-
         return false;
     }
 
-    function isMoveSafeForKing(newIndex, piece) {
-        var possibleModel = [];
-        for (var i = 0; i < pieceModel.count; i++) {
-            possibleModel.push({"pieceIndex": pieceModel.get(i).pieceIndex,
-                                  "color": pieceModel.get(i).color,
-                                  "piece": pieceModel.get(i).piece});
-        }
-
-        // Check if this is king move on attacked field
-        if (piece.piece === 'king') {
-            return isKingMoveSafe(possibleModel, newIndex, piece);
-        }
-
-        // Other pieces cannot make king 'open' for attack
-        var kingIndex = Global.getPieceIndex(pieceModel, 'king', piece.color);
-        for (var j = 0; j < possibleModel.length; j++) {
-            if (possibleModel[j].pieceIndex === piece.pieceIndex) {
-                possibleModel[j].pieceIndex = newIndex;
+    function isKingUnderAttack(pieces, color)
+    {
+        for (var i = 0; i < pieces.length; i++) {
+            if (pieces[i].color === color && pieces[i].piece === 'king') {
+                if (isCellUnderAttack(pieces, pieces[i].pieceIndex, color)) {
+                    return true;
+                }
             }
         }
-
-        if (isCellAttacked(possibleModel, kingIndex, piece.color)) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
-    function isKingMoveSafe(possibleModel, index, piece) {
-        if (isCellAttacked(possibleModel, index, piece.color)) {
-            return false;
-        }
+    function pseudoPieceMove(pieces, piece, newIndex)
+    {
+        var pseudoPieces = JSON.parse(pieces);
+        for (var i = 0; i < pseudoPieces.length; i++) {
+            if (pseudoPieces[i].pieceIndex === Number(newIndex)) {
+                pseudoPieces.splice(i, 1);
+            }
 
-        for (var i = 0; i < possibleModel.length; i++) {
-            if (possibleModel[i].pieceIndex === piece.pieceIndex) {
-                possibleModel[i].pieceIndex = index;
+            if (pseudoPieces[i].pieceIndex === piece.pieceIndex) {
+                pseudoPieces[i].pieceIndex = Number(newIndex);
             }
         }
-        var kingIndex = Global.getPossiblePieceIndex(possibleModel, 'king', piece.color);
-        if (isCellAttacked(possibleModel, kingIndex, piece.color)) {
-            return false;
-        }
+        return pseudoPieces;
+    }
 
-        return true;
+    function removeKingUnsafeMoves(pieces, piece, moves)
+    {
+        for (var move in moves) {
+            if (moves[move] === 'current') {
+                continue;
+            }
+
+            var pseudoPieces = pseudoPieceMove(JSON.stringify(pieces), piece, move);
+
+            if (isKingUnderAttack(pseudoPieces, piece.color)) {
+                delete moves[move];
+            }
+        }
+        return moves;
     }
 
     function isNextMovePossible(color) {
@@ -254,8 +263,8 @@ QtObject {
 
 
     function isKingInCheck(color) {
-        var kingIndex = Global.getPieceIndex(pieceModel, 'king', color);
-        return isCellModelAttacked(pieceModel, kingIndex, color)
+//        var kingIndex = Global.getPieceIndex(pieceModel, 'king', color);
+//        return isCellModelAttacked(pieceModel, kingIndex, color)
     }
 }
 
