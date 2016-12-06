@@ -42,18 +42,26 @@ Item {
                         switch (gameManager.state) {
                         case 'initState':
                             // Empty cell is wrong first move
-                            if (!Global.isCellOccupied(pieceModel, index)) {
+//                            if (!Global.isCellOccupied(pieceModel, index)) {
+//                                break;
+//                            }
+
+                            var pieces = Global.getPiecesFromModel(pieceModel);
+                            if (!Global.isSquareOccupied(pieces, index)) {
                                 break;
                             }
 
+                            var piece = pieces[index];
+
                             // Not correct if piece is not belong to us
-                            var piece = Global.getPieceByIndex(pieceModel, index);
-                            if (!Global.isSameColor(piece.color, gameManager.moveColor)) {
+                            if (piece.color !== gameManager.moveColor) {
                                 break;
                             }
 
                             // Let's find possible moves
-                            gameManager.getMoves(piece);
+                            gameManager.getMoves(pieces, index);
+
+
 
                             // No moves, reset state and make another choice
                             if (!gameManager.hasPieceMoves()) {
@@ -108,7 +116,8 @@ Item {
         property real cellWidth: chessGrid.width / boardSize
         property real cellHeight: chessGrid.height / boardSize
 
-        function movePiece(fromIndex, toIndex) {
+        function movePiece(fromIndex, toIndex)
+        {
             for (var i = 0; i < pieceModel.count; ++i) {
                 if (pieceModel.get(i).pieceIndex === fromIndex) {
                     pieceRepeater.itemAt(i).toIndex = toIndex;
@@ -117,9 +126,8 @@ Item {
             }
         }
 
-
-
-        function getHighlightColor(index) {
+        function getHighlightColor(index)
+        {
             var colors = {
                 'current': 'yellow',
                 'move': 'green',

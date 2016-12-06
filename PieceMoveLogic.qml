@@ -61,11 +61,10 @@ QtObject {
         }
     }
 
-    function getMoves(pieces, piece)
+    function getMoves(pieces, index)
     {
-        var index = piece.pieceIndex;
-        var name = piece.piece;
-        var color = piece.color;
+        var name = pieces[index].piece;
+        var color = pieces[index].color;
 
         var x = index % boardSize;
         var y = Math.floor(index / boardSize);
@@ -81,7 +80,7 @@ QtObject {
         var rules = moveRules[name];
 
         if (isPawn) {
-            rules[0][0] = piece.wasMoved ? 1 : 2;
+            rules[0][0] = pieces[index].wasMoved ? 1 : 2;
         }
 
         for (var i = 0; i < rules.length; i++) {
@@ -98,6 +97,7 @@ QtObject {
                 // pawn 'delta', check possible pawn attack fields
                 if (isPawn && rules[0][0] === j) {
 
+                    // TODO: move it out from this function
                     // Pawn can make 'in passing capture', add this field to attack
                     if (captureField.index !== -1) {
                         moves[captureField.index] = 'attack';
@@ -114,7 +114,7 @@ QtObject {
                         }
 
                         // If move is long "in passing capture" is possible
-                        if (!piece.wasMoved) {
+                        if (!pieces[index].wasMoved) {
 
                             // Update 'capture' field for enemy pawn move
                             var captureIndex = attacks[k] + rules[i][2] * boardSize;
@@ -148,14 +148,13 @@ QtObject {
     {
         var attackPieces = [['bishop', 'queen'], ['rook', 'queen'], ['knight'], ['king'], ['pawn']];
         for (var i = 0; i < attackPieces.length; i++) {
-            var piece = {
-                'pieceIndex': index,
+            pieces[index] = {
                 'piece': attackPieces[i][0],
                 'color': color,
                 'wasMoved': true
-            };
+            }
 
-            var moves = getMoves(pieces, piece);
+            var moves = getMoves(pieces, index);
 
             for (var field in moves) {
                 if (moves[field] === 'attack') {
@@ -173,41 +172,38 @@ QtObject {
 
     function isKingUnderAttack(pieces, color)
     {
-        for (var i = 0; i < pieces.length; i++) {
-            if (pieces[i].color === color && pieces[i].piece === 'king') {
-                if (isCellUnderAttack(pieces, pieces[i].pieceIndex, color)) {
+        for (var k in pieces) {
+            if (pieces[k].color === color && pieces[k].piece === 'king') {
+                if (isCellUnderAttack(pieces, k, color)) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
-    function pseudoPieceMove(pieces, piece, newIndex)
+    function pseudoPieceMove(pieces, index, newIndex)
     {
         var pseudoPieces = JSON.parse(pieces);
-        for (var i = 0; i < pseudoPieces.length; i++) {
-            if (pseudoPieces[i].pieceIndex === Number(newIndex)) {
-                pseudoPieces.splice(i, 1);
-            }
+        var piece = pseudoPieces[index];
 
-            if (pseudoPieces[i].pieceIndex === piece.pieceIndex) {
-                pseudoPieces[i].pieceIndex = Number(newIndex);
-            }
-        }
+        delete pseudoPieces[index];
+        pseudoPieces[newIndex] = piece;
+
         return pseudoPieces;
     }
 
-    function removeKingUnsafeMoves(pieces, piece, moves)
+    function removeKingUnsafeMoves(pieces, index, moves)
     {
         for (var move in moves) {
             if (moves[move] === 'current') {
                 continue;
             }
 
-            var pseudoPieces = pseudoPieceMove(JSON.stringify(pieces), piece, move);
+            var pseudoPieces = pseudoPieceMove(JSON.stringify(pieces), index, move);
 
-            if (isKingUnderAttack(pseudoPieces, piece.color)) {
+            if (isKingUnderAttack(pseudoPieces, pieces[index].color)) {
                 delete moves[move];
             }
         }
@@ -261,11 +257,6 @@ QtObject {
         return false;
     }
 
-
-    function isKingInCheck(color) {
-//        var kingIndex = Global.getPieceIndex(pieceModel, 'king', color);
-//        return isCellModelAttacked(pieceModel, kingIndex, color)
-    }
 }
 
 

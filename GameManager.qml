@@ -50,12 +50,11 @@ StateGroup {
         return false;
     }
 
-    function getMoves(piece) {
-        var pieces = Global.getPiecesFromModel(pieceModel);
-        moves = logic.getMoves(pieces, piece);
+    function getMoves(pieces, index) {
+        moves = logic.getMoves(pieces, index);
 
         // Check king safety
-        moves = logic.removeKingUnsafeMoves(pieces, piece, moves);
+        moves = logic.removeKingUnsafeMoves(pieces, index, moves);
     }
 
     property var logic: PieceMoveLogic {
