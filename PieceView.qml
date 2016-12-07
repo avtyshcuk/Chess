@@ -8,15 +8,13 @@ Repeater {
     property real cellWidth: 0
     property real cellHeight: 0
 
-    property MessageDialog dialog: MessageDialog {
+    property MessageDialog gameOverDialog: MessageDialog {
         id: messageDialog
-        title: "May I have your attention please"
-        text: "It's so cool that you are using Qt Quick."
+        title: 'Game Over!'
+        text: Global.invertedColor(gameManager.moveColor) + ' wins!'
         onAccepted: {
-            console.log("And of course you could only agree.")
-//            Qt.quit()
+            Qt.quit()
         }
-
     }
 
     delegate: Piece {
@@ -44,10 +42,8 @@ Repeater {
 
                 handlePawnInPassing(toIndex);
 
-//                gameManager.isKingInCheck = gameManager.logic.isKingInCheck(gameManager.moveColor);
-
-                if (gameManager.isKingInCheck && !gameManager.logic.isNextMovePossible(gameManager.moveColor)) {
-                    dialog.open();
+                if (!gameManager.isKingMate()) {
+                    gameOverDialog.open();
                 }
             }
         }

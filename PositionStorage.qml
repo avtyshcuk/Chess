@@ -5,7 +5,7 @@ Settings {
     id: storage
     property var initialPosition: {
         'white': {
-            'a1':'rook', /*'a2':'pawn',*/
+            'a1':'rook', 'a2':'pawn',
             'b1':'knight', 'b2':'pawn',
             'c1':'bishop', 'c2':'pawn',
             'd1':'queen', 'd2':'pawn',
@@ -15,9 +15,9 @@ Settings {
             'h1':'rook', 'h2':'pawn'
         },
         'black': {
-//            'a8':'rook', 'a7':'pawn',
-//            'b8':'knight', 'b7':'pawn',
-//            'c8':'bishop', 'c7':'pawn',
+            'a8':'rook', 'a7':'pawn',
+            'b8':'knight', 'b7':'pawn',
+            'c8':'bishop', 'c7':'pawn',
             'd8':'queen', 'd7':'pawn',
             'e8':'king', 'e7':'pawn',
             'f8':'bishop', 'f7':'pawn',

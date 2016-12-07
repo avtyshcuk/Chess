@@ -144,8 +144,10 @@ QtObject {
         return moves;
     }
 
-    function isCellUnderAttack(pieces, index, color)
+    function isCellUnderAttack(piecesCopy, index, color)
     {
+        var pieces = JSON.parse(piecesCopy);
+
         var attackPieces = [['bishop', 'queen'], ['rook', 'queen'], ['knight'], ['king'], ['pawn']];
         for (var i = 0; i < attackPieces.length; i++) {
             pieces[index] = {
@@ -161,6 +163,7 @@ QtObject {
                     // Same piece type we can attack, also can attack us
                     var attackPiece = Global.getPiece(pieces, field);
 
+                    // TODO: Bug here, sometimes attackPiece is undefined
                     if (attackPieces[i].indexOf(attackPiece.piece) !== -1) {
                         return true;
                     }
@@ -174,7 +177,8 @@ QtObject {
     {
         for (var k in pieces) {
             if (pieces[k].color === color && pieces[k].piece === 'king') {
-                if (isCellUnderAttack(pieces, k, color)) {
+                var piecesCopy = JSON.stringify(pieces);
+                if (isCellUnderAttack(piecesCopy, k, color)) {
                     return true;
                 }
             }
@@ -207,56 +211,27 @@ QtObject {
                 delete moves[move];
             }
         }
+
         return moves;
     }
 
-    function isNextMovePossible(color) {
-        var possibleModel = [];
-        for (var i = 0; i < pieceModel.count; i++) {
-            possibleModel.push({"pieceIndex": pieceModel.get(i).pieceIndex,
-                                  "color": pieceModel.get(i).color,
-                                  "piece": pieceModel.get(i).piece});
-        }
+    function isNextMovePossible(pieces, color)
+    {
+        for (var index in pieces) {
+            if (pieces[index].color !== color) {
+                continue;
+            }
 
-        for (var k = 0; k < possibleModel.length; k++) {
-            if (possibleModel[k].color === color) {
+            var moves = getMoves(pieces, index);
 
-                var pieceX = possibleModel[k].pieceIndex % Global.boardSize;
-                var pieceY = Math.floor(possibleModel[k].pieceIndex / Global.boardSize);
-
-
-                var pieceName = possibleModel[k].piece === 'pawn' ? color + '_' + possibleModel[k].piece :
-                                                                        possibleModel[k].piece;
-                var pieceRules = moveRules[pieceName];
-
-//                if (piece.piece === 'pawn') {
-//                    return getPawnMoves(pieceX, pieceY, piece, pieceRules);
-//                }
-
-                for (var i = 0; i < pieceRules.length; i++) {
-                    for (var j = 1; j <= pieceRules[i][0]; j++) {
-                        var x = pieceX + j * pieceRules[i][1];
-                        var y = pieceY + j * pieceRules[i][2];
-
-                        if (!Global.isValidIndex(x, y)) {
-                            break;
-                        }
-
-                        var newIndex = y * boardSize + x;
-
-                        if (!isMoveSafeForKing(newIndex, possibleModel[k])) {
-                            break;
-                        }
-
-                        return true;
-                    }
-                }
+            var safeMoves = removeKingUnsafeMoves(pieces, index, moves);
+            if (Object.keys(safeMoves).length > 1) {
+                return true;
             }
         }
 
         return false;
     }
-
 }
 
 

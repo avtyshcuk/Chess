@@ -31,10 +31,10 @@ Item {
 
                 border { width: 3; color: internal.getHighlightColor(index) }
 
-                Text {
-                    anchors.fill: parent
-                    text: index
-                }
+//                Text {
+//                    anchors.fill: parent
+//                    text: index
+//                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -42,11 +42,8 @@ Item {
                         switch (gameManager.state) {
                         case 'initState':
                             // Empty cell is wrong first move
-//                            if (!Global.isCellOccupied(pieceModel, index)) {
-//                                break;
-//                            }
-
                             var pieces = Global.getPiecesFromModel(pieceModel);
+
                             if (!Global.isSquareOccupied(pieces, index)) {
                                 break;
                             }
@@ -60,8 +57,6 @@ Item {
 
                             // Let's find possible moves
                             gameManager.getMoves(pieces, index);
-
-
 
                             // No moves, reset state and make another choice
                             if (!gameManager.hasPieceMoves()) {

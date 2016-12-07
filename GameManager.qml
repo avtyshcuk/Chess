@@ -19,6 +19,7 @@ StateGroup {
             name: 'firstClickState'
             StateChangeScript {
                 script: {
+
                 }
             }
         }
@@ -33,14 +34,15 @@ StateGroup {
     property var moves: ({})
     property var attackMoves: logic.attackMoves
     property var captureField: logic.captureField
-    property bool isKingInCheck: false
 
-    function hasPieceMoves() {
+    function hasPieceMoves()
+    {
         // At least one 'move' or 'attack' must be present
         return (Object.keys(moves).length > 1);
     }
 
-    function isCorrectMove(index) {
+    function isCorrectMove(index)
+    {
         if (index in moves) {
             var move = moves[index];
             if (move === 'move' || move === 'attack') {
@@ -50,11 +52,24 @@ StateGroup {
         return false;
     }
 
-    function getMoves(pieces, index) {
+    function getMoves(pieces, index)
+    {
         moves = logic.getMoves(pieces, index);
 
         // Check king safety
         moves = logic.removeKingUnsafeMoves(pieces, index, moves);
+    }
+
+    function isKingMate()
+    {
+        var pieces = Global.getPiecesFromModel(pieceModel);
+        if (logic.isKingUnderAttack(pieces, moveColor)) {
+            // If King in check and no moves possible - mate
+            if (!logic.isNextMovePossible(pieces, moveColor)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     property var logic: PieceMoveLogic {
