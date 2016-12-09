@@ -20,7 +20,8 @@ function getPiecesFromModel(model)
 
         pieces[index] = {
             'color': model.get(i).color,
-            'piece': model.get(i).piece
+            'piece': model.get(i).piece,
+            'wasMoved': model.get(i).wasMoved
         };
     }
 
