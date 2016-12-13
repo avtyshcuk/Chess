@@ -32,8 +32,9 @@ StateGroup {
     property var currentPiece: null
     property var pieceModel: []
     property var moves: ({})
-    property var attackMoves: logic.attackMoves
-    property var captureField: logic.captureField
+//    property var attackMoves: logic.attackMoves
+    property var captureField: {'index': -1, 'captureIndex': -1}
+    property var inCaptionPawns: []
 
     function hasPieceMoves()
     {
@@ -56,6 +57,12 @@ StateGroup {
     {
         moves = logic.getMoves(pieces, index);
 
+        // Pawn can make 'in passing capture', add this field to attack
+        if (currentPiece.piece === 'pawn' && inCaptionPawns.indexOf(index) !== -1) {
+            moves[captureField.index] = 'attack';
+        }
+        inCaptionPawns = [];
+
         // Check king safety
         moves = logic.removeKingUnsafeMoves(pieces, index, moves);
     }
@@ -64,6 +71,7 @@ StateGroup {
     {
         var pieces = Global.getPiecesFromModel(pieceModel);
         if (logic.isKingUnderAttack(pieces, moveColor)) {
+
             // If King in check and no moves possible - mate
             if (!logic.isNextMovePossible(pieces, moveColor)) {
                 return false;

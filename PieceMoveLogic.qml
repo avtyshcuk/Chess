@@ -44,23 +44,6 @@ QtObject {
         return false;
     }
 
-    function updateCaptionField(pieces, captureIndex, color, index, newIndex)
-    {
-        var pawnPiece = {
-            'pieceIndex': captureIndex,
-            'color': Global.invertedColor(color),
-            'piece': 'pawn'
-        }
-
-        if (Global.isPieceOnCell(pieces, pawnPiece)) {
-            captureField = {
-                'index': index,
-                'color': color,
-                'captureIndex': newIndex
-            }
-        }
-    }
-
     function getMoves(pieces, index)
     {
         var name = pieces[index].piece;
@@ -96,15 +79,16 @@ QtObject {
 
                 // pawn 'delta', check possible pawn attack fields
                 if (isPawn && rules[0][0] === j) {
+                    var pawnY = y + rules[i][2];
 
-                    // TODO: move it out from this function
-                    // Pawn can make 'in passing capture', add this field to attack
-                    if (captureField.index !== -1) {
-                        moves[captureField.index] = 'attack';
+                    var attacks = [ ];
+                    if (Global.isValidIndex(x + 1, pawnY)) {
+                        attacks.push(pawnY * boardSize + (x + 1));
                     }
 
-                    var pawnY = y + rules[i][2];
-                    var attacks = [pawnY * boardSize + (x + 1), pawnY * boardSize + (x - 1)];
+                    if (Global.isValidIndex(x - 1, pawnY)) {
+                        attacks.push(pawnY * boardSize + (x - 1));
+                    }
 
                     for (var k = 0; k < attacks.length; k++) {
                         if (Global.isSquareOccupied(pieces, attacks[k])) {
@@ -113,14 +97,14 @@ QtObject {
                             }
                         }
 
-                        // If move is long "in passing capture" is possible
-                        if (!pieces[index].wasMoved) {
+//                        // If move is long "in passing capture" is possible
+//                        if (!pieces[index].wasMoved) {
 
-                            // Update 'capture' field for enemy pawn move
-                            var captureIndex = attacks[k] + rules[i][2] * boardSize;
-                            var pawnIndex = pawnY * boardSize + x;
-                            updateCaptionField(pieces, captureIndex, color, pawnIndex, newIndex);
-                        }
+//                            // Update 'capture' field for enemy pawn move
+//                            var captureIndex = attacks[k] + rules[i][2] * boardSize;
+//                            var pawnIndex = pawnY * boardSize + x;
+//                            updateCaptionField(pieces, captureIndex, color, pawnIndex, newIndex);
+//                        }
                     }
                 }
 
@@ -160,10 +144,9 @@ QtObject {
 
             for (var field in moves) {
                 if (moves[field] === 'attack') {
-                    // Same piece type we can attack, also can attack us
+                    // Same type of piece we can attack, also can attack us
                     var attackPiece = Global.getPiece(pieces, field);
 
-                    // TODO: Bug here, sometimes attackPiece is undefined
                     if (attackPieces[i].indexOf(attackPiece.piece) !== -1) {
                         return true;
                     }

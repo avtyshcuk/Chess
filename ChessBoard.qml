@@ -31,10 +31,10 @@ Item {
 
                 border { width: 3; color: internal.getHighlightColor(index) }
 
-//                Text {
-//                    anchors.fill: parent
-//                    text: index
-//                }
+                Text {
+                    anchors.fill: parent
+                    text: index
+                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -49,6 +49,7 @@ Item {
                             }
 
                             var piece = pieces[index];
+                            gameManager.currentPiece = piece;
 
                             // Not correct if piece is not belong to us
                             if (piece.color !== gameManager.moveColor) {
@@ -65,7 +66,6 @@ Item {
                             }
 
                             gameManager.firstClickIndex = index;
-                            gameManager.currentPiece = piece;
                             gameManager.state = 'firstClickState';
                             break;
 
@@ -73,9 +73,6 @@ Item {
                             if (!gameManager.isCorrectMove(index)) {
                                 break;
                             }
-
-                            var modelIndex = Global.getModelIndex(pieceModel, gameManager.firstClickIndex);
-                            pieceModel.setProperty(modelIndex, "wasMoved", true);
 
                             internal.movePiece(gameManager.firstClickIndex, index);
 

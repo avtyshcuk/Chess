@@ -109,13 +109,17 @@ Repeater {
                 removePieceFromModel(pieceModel, toIndex);
                 pieceModel.get(index).pieceIndex = toIndex;
 
+                // Specific pawns feature - promotion and 'en passant'
                 handlePawnInPassing(toIndex);
                 handlePawnPromotion(toIndex);
+
+                // Pawns and king rules depend on fact whether were moved
+                var modelIndex = Global.getModelIndex(pieceModel, toIndex);
+                pieceModel.setProperty(modelIndex, "wasMoved", true);
 
                 if (!gameManager.isKingMate()) {
                     gameOverDialog.open();
                 }
-
             }
         }
     }
@@ -156,23 +160,46 @@ Repeater {
 
     function handlePawnInPassing(toIndex)
     {
-        // In passing capture is possible only for pawns
-        var capture = gameManager.captureField;
-        var isAttackColor = gameManager.moveColor === capture.color;
-        if (toIndex === capture.index && isAttackColor) {
-            if (gameManager.currentPiece.piece === 'pawn') {
-                var modelIndex = Global.getModelIndex(pieceModel, capture.captureIndex);
-                pieceModel.remove(modelIndex);
-                gameManager.captureField.index = -1;
-            }
+        var piece = gameManager.currentPiece;
+        if (piece.piece !== 'pawn') {
+            gameManager.captureField = {'index': -1, 'captureIndex': -1};
+            return;
         }
 
-        // In passing pawn capture works only once
-        // and only if pawn moved two ranks forward
-        if (isAttackColor) {
-            gameManager.captureField.index = -1;
-        } else if (toIndex !== capture.captureIndex) {
-            gameManager.captureField.index = -1;
+        if (gameManager.captureField.index === toIndex) {
+            removePieceFromModel(pieceModel, gameManager.captureField.captureIndex);
+        }
+
+        gameManager.captureField = {'index': -1, 'captureIndex': -1};
+        if (!piece.wasMoved) {
+            var x = toIndex % boardSize;
+            var y = Math.floor(toIndex / boardSize);
+
+            var checkedPiece = {'piece': 'pawn', 'color': gameManager.moveColor};
+
+            var pieces = Global.getPiecesFromModel(pieceModel);
+            if (Global.isValidIndex(x + 1, y)) {
+                var rightIndex = y * boardSize + (x + 1);
+                if (Global.isPieceOnCell(pieces, checkedPiece, rightIndex)) {
+                    gameManager.inCaptionPawns.push(rightIndex);
+                }
+            }
+
+            if (Global.isValidIndex(x - 1, y)) {
+                var leftIndex = y * boardSize + (x - 1);
+                if (Global.isPieceOnCell(pieces, checkedPiece, leftIndex)) {
+                    gameManager.inCaptionPawns.push(leftIndex);
+                }
+            }
+
+            var direction = piece.color === 'white' ? -1 : 1;
+            var inPassingIndex = (y - direction) * boardSize + x;
+
+            // Some pawns are 'ready' to capture us
+            if (gameManager.inCaptionPawns.length > 0) {
+                gameManager.captureField.index = inPassingIndex;
+                gameManager.captureField.captureIndex = toIndex;
+            }
         }
     }
 }

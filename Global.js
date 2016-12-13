@@ -38,9 +38,8 @@ function getPiece(pieces, index)
     return pieces[index];
 }
 
-function isPieceOnCell(pieces, piece)
+function isPieceOnCell(pieces, piece, index)
 {
-    var index = piece.pieceIndex;
     var color = piece.color
     var name = piece.piece;
 
@@ -54,7 +53,6 @@ function isPieceOnCell(pieces, piece)
 
     return false;
 }
-
 
 function getSquareBorder(pieces, index)
 {
