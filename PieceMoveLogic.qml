@@ -96,15 +96,6 @@ QtObject {
                                 moves[attacks[k]] = 'attack';
                             }
                         }
-
-//                        // If move is long "in passing capture" is possible
-//                        if (!pieces[index].wasMoved) {
-
-//                            // Update 'capture' field for enemy pawn move
-//                            var captureIndex = attacks[k] + rules[i][2] * boardSize;
-//                            var pawnIndex = pawnY * boardSize + x;
-//                            updateCaptionField(pieces, captureIndex, color, pawnIndex, newIndex);
-//                        }
                     }
                 }
 

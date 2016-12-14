@@ -31,11 +31,6 @@ Item {
 
                 border { width: 3; color: internal.getHighlightColor(index) }
 
-                Text {
-                    anchors.fill: parent
-                    text: index
-                }
-
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {

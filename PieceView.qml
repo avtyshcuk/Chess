@@ -113,6 +113,9 @@ Repeater {
                 handlePawnInPassing(toIndex);
                 handlePawnPromotion(toIndex);
 
+                // King castling
+                handleKingCastling(toIndex);
+
                 // Pawns and king rules depend on fact whether were moved
                 var modelIndex = Global.getModelIndex(pieceModel, toIndex);
                 pieceModel.setProperty(modelIndex, "wasMoved", true);
@@ -201,5 +204,22 @@ Repeater {
                 gameManager.captureField.captureIndex = toIndex;
             }
         }
+    }
+
+    function handleKingCastling(toIndex)
+    {
+        for (var i = 0; i < gameManager.castlingFields.length; i++) {
+            if (toIndex !== gameManager.castlingFields[i].kingIndex) {
+                continue;
+            }
+
+            var oldIndex = gameManager.castlingFields[i].oldRookIndex;
+            var newIndex = gameManager.castlingFields[i].newRookIndex;
+            var rookModelIndex = Global.getModelIndex(pieceModel, oldIndex);
+
+            pieceModel.get(rookModelIndex).pieceIndex = newIndex;
+            break;
+        }
+        gameManager.castlingFields = [];
     }
 }
