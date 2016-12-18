@@ -17,19 +17,36 @@ Item {
             id: repeater
             model: boardSize * boardSize
 
-            Rectangle {
+            Item {
                 id: gridRect
                 width: internal.cellWidth
                 height: internal.cellHeight
 
-                property color black: "#612700"
-                property color white: "#ECB589"
-                property bool isFirstCellWhite: Math.floor(index / boardSize) % 2
-                property bool indexParity: index % 2
-                color: isFirstCellWhite ? (indexParity ? white : black) :
-                                          (indexParity ? black : white)
+                Item {
+                    id: _shadowMarker
+                    anchors.fill: parent;
+                    anchors.margins: -10
 
-                border { width: 3; color: internal.getHighlightColor(index) }
+                    ColorOverlay {
+                        anchors.fill: _shadowMarker;
+                        anchors.margins: 10
+                        source: Rectangle {
+                            id: cell
+                            width: internal.cellWidth
+                            height: internal.cellHeight
+
+                            property color black: "#612700"
+                            property color white: "#ECB589"
+                            property bool isFirstCellWhite: Math.floor(index / boardSize) % 2
+                            property bool indexParity: index % 2
+                            color: isFirstCellWhite ? (indexParity ? white : black) :
+                                                      (indexParity ? black : white)
+                            visible: false
+
+                        }
+                    }
+                    visible: false
+                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -76,6 +93,15 @@ Item {
                             break;
                         }
                     }
+                }
+
+                InnerShadow {
+                    anchors.fill: _shadowMarker
+                    radius: 30
+                    samples: 32
+                    color: internal.getHighlightColor(index)
+                    source: _shadowMarker
+                    smooth: true
                 }
             }
         }
